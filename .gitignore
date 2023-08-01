@@ -1,0 +1,7 @@
+*.env
+/venv
+/env
+*.pyc
+/.vscode
+/staticfiles
+change_logo.py

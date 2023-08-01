@@ -1,0 +1,22 @@
+--Crear base de datos Postgres
+
+--Renombrar archivo envexample a .env y cambiar las variables.
+
+--Crear Entorno virtual
+py -m venv venv
+
+--Activar entorno virtual
+.\venv\Scripts\activate
+
+--Actualizar pip
+py -m pip install --upgrade pip
+
+--Instalar Requirements
+pip install -r requirements.txt
+
+--Migrar tablas a BD
+python manage.py makemigrations
+python manage.py migrate
+
+--Ejecutar Proyecto
+python manage.py runserver

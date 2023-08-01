@@ -1,0 +1,12 @@
+SECRET_KEY='/)7?9Bys:Jj}H$TC]>-jARW3vZKu9GD;,)XAcb)&;Z:K].).q0'
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost,192.168.1.2
+TIME_ZONE=UTC
+LANGUAGE_CODE='es-es'
+
+DB_ENGINE='django.db.backends.postgresql_psycopg2'
+DB_NAME=nombre
+DB_USER=usuario
+DB_PASS='pass'
+DB_HOST=127.0.0.1
+DB_PORT=5432
