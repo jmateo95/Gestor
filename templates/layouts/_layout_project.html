@@ -1,0 +1,34 @@
+{% extends "_base.html" %}
+{% load static %}
+
+{% block body_extra %}
+{% endblock %}
+
+{% block page_content %}
+<!-- Begin page -->
+<div id="wrapper" class="q-bg">
+
+    <!-- Topbar -->
+    {% block topbar %}
+        {% include 'partials/topbar.html' %}
+    {% endblock %}
+
+    <!-- Sidebar -->
+    {% block sidebar %}
+        {% include 'partials/sidebar.html' %}
+    {% endblock %}
+
+    <div class="content-page content-color">
+        <div class="content" id="total_page">
+            {% include 'partials/messages.html' %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    {% block footer %}
+        {% include 'partials/footer.html' %}
+    {% endblock %}
+</div>
+{% endblock %}
+

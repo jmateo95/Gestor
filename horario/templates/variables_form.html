@@ -1,0 +1,64 @@
+{% extends "layouts/_layout_project.html" %}
+{% load static i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %} Horario :: Variables{% endblock title %}
+
+{% block content %}
+<div class="container-fluid" style="min-height: 88vh !important;">
+    <div class="row pb-4 mt-4">
+        <div class="col-sm-6 offset-sm-3">
+            <div class="row">
+                <div class="col-sm-8 offset-sm-2">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="card rounded p-shadow-sm">
+                            <div class="card-body">
+                                <div class="row" style="padding-bottom: 1em;">
+                                    <div class="col-sm-12" style="font-weight: bold;">
+                                        <h4 style="font-weight: bold; text-align: center">
+                                            Editar las variables
+                                        </h4>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group row">
+                                        {{ form | crispy }} 
+                                    </div>
+                                    <div class="col-sm-12" style="text-align: center;">
+                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button p-shadow-sm">
+                                            Guardar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_javascript %}
+
+{% endblock%}

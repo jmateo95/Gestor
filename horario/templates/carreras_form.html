@@ -1,0 +1,64 @@
+{% extends "layouts/_layout_project.html" %}
+{% load static i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %} Horario :: Salones{% endblock title %}
+
+{% block content %}
+<div class="container-fluid" style="min-height: 88vh !important;">
+    <div class="row pb-4 mt-4">
+        <div class="col-sm-6 offset-sm-3">
+            <div class="row justify-content-center">
+                <div class="col-sm-10 offset-sm-1">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="card rounded p-shadow-sm" style="padding: 1rem 1.25rem 2rem 1.25rem;">
+                            <div class="card-body">
+                                <div class="col d-flex justify-content-between fs-5">
+                                    <label for="company">Carreras </label>
+                                    <a href="#" class="btn projectapp-button hover-principal color-principal press-button p-shadow-sm" style="width: 200px !important;">
+                                        Descargar Plantilla
+                                    </a>
+                                </div>
+                                <div class="form-group row mt-3">
+                                    <div id="div_id_file" class="mb-3"> 
+                                        <label for="id_hora_inicio" class="form-label requiredField">Documento<span class="asteriskField">*</span> </label>
+                                        <input type="file" name="file" id="file" class="form-control timeinput timeinputwithtimetype" required> 
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 mt-2" style="text-align: center;">
+                                    <button type="submit" class="btn projectapp-button hover-principal color-principal press-button p-shadow-sm">
+                                        Guardar
+                                    </button>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_javascript %}
+
+{% endblock%}

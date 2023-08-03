@@ -18,5 +18,9 @@ pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 
+--Crear superusuario (Solo una vez):
+python manage.py createsuperuser --username jmateo95 --email joubmaja.69@gmail.com
+--pass: Cambiame1234
+
 --Ejecutar Proyecto
 python manage.py runserver

@@ -1,0 +1,48 @@
+{% extends "layouts/_layout_project.html" %}
+{% load static i18n %}
+
+{% block title %} Centinela :: Error 403{% endblock title %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title"></h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="error-text-box">
+                <svg viewBox="0 0 600 200">
+                    <symbol id="s-text">
+                        <text text-anchor="middle" x="50%" y="50%" dy=".35em">403!</text>
+                    </symbol>
+                    <use class="text" xlink:href="#s-text"></use>
+                    <use class="text" xlink:href="#s-text"></use>
+                    <use class="text" xlink:href="#s-text"></use>
+                    <use class="text" xlink:href="#s-text"></use>
+                    <use class="text" xlink:href="#s-text"></use>
+                </svg>
+            </div>
+            <div class="text-center">
+                <h3 class="mt-0 mb-2">Whoops! No tienes acceso a esta pagina </h3>
+                <p class="text-muted mb-3">Parece que te has equivocado de camino. No te preocupes...
+                    nos pasa a los mejores.</p>
+                <a href="{% url 'index' %}" class="primaryAction btn color-principal btn-block">Volver al Inicio</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_javascript %}
+
+{% endblock%}
+
