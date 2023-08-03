@@ -1,0 +1,82 @@
+{% extends "layouts/_layout_project.html" %}
+{% load static i18n %}
+{% load tags %}
+
+{% block title %} Horario :: Index{% endblock title %}
+
+{% block content %}
+
+<div class="container-fluid" style="min-height: 90vh !important;">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="content" style="background:#ffffff;">
+                    <!-- Main content -->
+                    <div class="content" style="margin-bottom: 10em">
+                        <div style="margin-top: 0vh; margin-bottom: 0vh; margin-right: 2vw; margin-left: 2vw;">
+                            <div class="row" style="padding-top: 5em; display: flex; align-items: center;">
+                                <div class="col-sm-12 col-md-12 col-lg-12">
+                                    <div class="card rounded2 p-shadow-sm">
+                                        <div class="text-center mb-2">
+                                            <h2>Horario de Clases</h2>
+                                        </div>
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Periodo</th>
+                                                    {% for salon in salones %}
+                                                        <th scope="col">{{ salon.nombre }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for periodo in periodos %}
+                                                <tr>
+                                                    <th scope="row">{{ periodo.hora_inicio }}- {{ periodo.hora_fin }}</th>
+                                                    {% for salon in salones %}
+                                                        <td>{{ asignaciones_dict|get_item:periodo|get_item:salon }}</td>
+                                                    {% endfor %}
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </div><!-- /.container-fluid -->
+                    </div>
+                    <!-- /.content -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11"></script>
+<script>
+    const typed = new Typed('.typed', {
+        strings: [
+            '<i class="mascota">horario de contratación</i>',
+            '<i class="mascota">disponibilidad de salones</i>',
+            '<i class="mascota">materias disponibles</i>'
+        ],
+        //stringsElement: '#cadenas-texto', // ID del elemento que contiene cadenas de texto a mostrar.
+        typeSpeed: 75, // Velocidad en mlisegundos para poner una letra,
+        startDelay: 300, // Tiempo de retraso en iniciar la animacion. Aplica tambien cuando termina y vuelve a iniciar,
+        backSpeed: 60, // Velocidad en milisegundos para borrrar una letra,
+        smartBackspace: true, // Eliminar solamente las palabras que sean nuevas en una cadena de texto.
+        shuffle: false, // Alterar el orden en el que escribe las palabras.
+        backDelay: 1500, // Tiempo de espera despues de que termina de escribir una palabra.
+        loop: true, // Repetir el array de strings
+        loopCount: false, // Cantidad de veces a repetir el array.  false = infinite
+        showCursor: true, // Mostrar cursor palpitanto
+        cursorChar: '|', // Caracter para el cursor
+        contentType: 'html', // 'html' o 'null' para texto sin formato
+    });
+</script>
+
+{% endblock%}

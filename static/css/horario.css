@@ -15,6 +15,16 @@
     padding: 3rem 1.25rem 2rem 1.25rem;
 }
 
+.rounded2 {
+    background: #ffffff !important;
+    border-style: solid !important;
+    border-color: #12243694 !important;
+    border: none;
+    border-radius: 25px 25px !important;
+    color: rgb(47, 47, 47);
+    padding: 3rem 1.25rem 2rem 1.25rem;
+}
+
 /**************************************/
 /* BOTONES
 /***************************************/

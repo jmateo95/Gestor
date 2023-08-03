@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import VariablesCreateView, VariablesUpdateView, SalonesCreateView, ProfesoresCreateView, CarrerasCreateView, MateriasCreateView, AsignacionesCreateView
+from .views import VariablesCreateView, VariablesUpdateView, SalonesCreateView, ProfesoresCreateView, CarrerasCreateView, MateriasCreateView, AsignacionesCreateView, PreviewView
 
 app_name = 'horario'
 
@@ -11,4 +11,5 @@ urlpatterns = [
     path('carreras/create/',            CarrerasCreateView.as_view(),       name='carreras-create'),
     path('materias/create/',            MateriasCreateView.as_view(),       name='materias-create'),
     path('asignaciones/create/',        AsignacionesCreateView.as_view(),   name='asignaciones-create'),
+    path('preview',                     PreviewView.as_view(),              name='preview'),
 ]
