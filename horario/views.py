@@ -185,10 +185,18 @@ class PreviewView(TemplateView):
             for salon in salones:
                 asignaciones = periodo.asignaciones_set.filter(salon=salon)
                 if asignaciones.exists():
-                    asignaciones_dict[periodo][salon] = asignaciones.first().materia.nombre
+                    asignacion = asignaciones.first()
+                    profesor = asignacion.profesor.nombre if asignacion.profesor else "Por Asignar"
+                    materia = asignacion.materia.nombre
+                    carrera = asignacion.materia.carrera.nombre
+                    asignaciones_dict[periodo][salon] = {
+                        'profesor': profesor,
+                        'materia': materia,
+                        'carrera': carrera
+                    }
                 else:
-                    asignaciones_dict[periodo][salon] = ''
-
+                    asignaciones_dict[periodo][salon] = None
+                    
         context['periodos'] = periodos
         context['salones'] = salones
         context['asignaciones_dict'] = asignaciones_dict

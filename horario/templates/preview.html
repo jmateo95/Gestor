@@ -23,7 +23,7 @@
                                         <table class="table table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <th scope="col">Periodo</th>
+                                                    <th scope="col">Periodo/Salon</th>
                                                     {% for salon in salones %}
                                                         <th scope="col">{{ salon.nombre }}</th>
                                                     {% endfor %}
@@ -32,9 +32,46 @@
                                             <tbody>
                                                 {% for periodo in periodos %}
                                                 <tr>
-                                                    <th scope="row">{{ periodo.hora_inicio }}- {{ periodo.hora_fin }}</th>
+                                                    <th scope="row">{{ periodo.hora_inicio }} - {{ periodo.hora_fin }}</th>
                                                     {% for salon in salones %}
-                                                        <td>{{ asignaciones_dict|get_item:periodo|get_item:salon }}</td>
+                                                        {% with asignacion=asignaciones_dict|get_item:periodo|get_item:salon %}
+                                                            <td style="text-align: center;">
+                                                                {% if asignacion %}
+                                                                    <span class="badge bg-primary" style="font-size: 0.7em; text-align:left">
+                                                                        <div class="row">
+                                                                            <div class="col-2">
+                                                                                <span class="material-symbols-outlined">
+                                                                                    account_circle
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="col-8 mt-1">
+                                                                                Profesor: {{ asignacion.profesor }}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-2">
+                                                                                <span class="material-symbols-outlined">
+                                                                                    import_contacts
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="col-8 mt-1">
+                                                                                Materia: {{ asignacion.materia }}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-2">
+                                                                                <span class="material-symbols-outlined">
+                                                                                    school
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="col-8 mt-1">
+                                                                                Carrera: {{ asignacion.carrera }}
+                                                                            </div>
+                                                                        </div>
+                                                                    </span>
+                                                                {% endif %}
+                                                            </td>
+                                                        {% endwith %}
                                                     {% endfor %}
                                                 </tr>
                                                 {% endfor %}
@@ -53,6 +90,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_javascript %}

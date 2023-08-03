@@ -133,7 +133,7 @@ class Asignaciones(models.Model):
         db_table = 'horario_asignaciones'
 
     def __str__(self):
-        return f"{self.nombre}"
+        return f"{self.codigo_asignacion}"
     
     @classmethod
     def eliminar(cls):
