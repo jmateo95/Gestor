@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView, CreateView, UpdateView
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from .models import Variables, Periodos, Salones, Profesores, Carreras, Materias, Asignaciones
 from django.shortcuts import get_object_or_404
@@ -158,10 +158,11 @@ class AsignacionesCreateView(TemplateView):
                 try:
                     profesor =  get_object_or_404(Profesores,   codigo=codigo_profesor)
                     materia  =  get_object_or_404(Materias,     codigo=codigo_materia)
-                    Asignaciones.objects.create(profesor=profesor, materia=materia)
+                    Asignaciones.objects.create(profesor=profesor, materia=materia, manual=True)
                 except Carreras.DoesNotExist:
                     print(f"Asignación con el numero {index} no encontrada.")
                     continue
+            
             return redirect(self.get_success_url())
     
     def get_success_url(self):
@@ -202,3 +203,47 @@ class PreviewView(TemplateView):
         context['asignaciones_dict'] = asignaciones_dict
 
         return context
+
+
+class GenerarView(TemplateView):
+    template_name = 'generar.html'
+    
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, context={})
+    
+    def post(self, request, *args, **kwargs):
+        print('------------------------')
+        if 'CUPO' in request.POST['valor']:
+            return self.generar_cupo(request)
+        elif 'SALON' in request.POST['valor']:
+            return self.generar_salon(request)
+        elif 'PROFESOR' in request.POST['valor']:
+            return self.generar_profesor(request)
+        elif 'MEJOR' in request.POST['valor']:
+            return self.generar_mejor(request)
+
+    def generar_cupo(self, request):
+        # Obtener todas las asignaciones con manual=False y eliminarlas
+        Asignaciones.objects.filter(manual=False).delete()
+        
+        # Obtener todas las materias que aún no tienen una asignación
+        materias_sin_asignacion = Materias.objects.filter(asignaciones__isnull=True)
+        for materia in materias_sin_asignacion:
+            Asignaciones.objects.create(
+                manual=False,
+                materia=materia,
+                periodo=None,
+                profesor=None,
+                salon=None
+            )
+        messages.success(self.request, '¡Se crearon los cupos con exito!')
+        return redirect('horario:generar')
+    
+    def generar_salon(self, request):
+        return redirect('horario:generar')
+    
+    def generar_profesor(self, request):
+        return redirect('horario:generar')
+    
+    def generar_mejor(self, request):
+        return redirect('horario:generar')

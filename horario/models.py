@@ -124,10 +124,11 @@ class Materias(models.Model):
     
 class Asignaciones(models.Model):
     codigo_asignacion   = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    periodo = models.ForeignKey(Periodos,       on_delete=models.CASCADE, null=True)
-    profesor = models.ForeignKey(Profesores,    on_delete=models.CASCADE, null=True)
-    materia = models.ForeignKey(Materias,       on_delete=models.CASCADE, null=True)
-    salon = models.ForeignKey(Salones,          on_delete=models.CASCADE, null=True)
+    manual              = models.BooleanField(default=False)
+    periodo             = models.ForeignKey(Periodos,       on_delete=models.CASCADE, null=True)
+    profesor            = models.ForeignKey(Profesores,     on_delete=models.CASCADE, null=True)
+    materia             = models.ForeignKey(Materias,       on_delete=models.CASCADE, null=True)
+    salon               = models.ForeignKey(Salones,        on_delete=models.CASCADE, null=True)
     
     class Meta:
         db_table = 'horario_asignaciones'

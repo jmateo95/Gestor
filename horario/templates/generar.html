@@ -1,0 +1,142 @@
+{% extends 'layouts/_layout_project.html' %}
+{% load static i18n %}
+{% load tags %}
+
+{% block title %}
+  Horario :: Index
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="min-height: 90vh !important;">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box">
+                    <div class="content" style="background:#ffffff;">
+                        <!-- Main content -->
+                        <div class="content" style="margin-bottom: 10em">
+                            <div style="margin-top: 0vh; margin-bottom: 0vh; margin-right: 2vw; margin-left: 2vw;">
+                                <div class="row" style="padding-top: 5em; display: flex; align-items: center;">
+                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="row g-5 p-3">
+                                            
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12" style="padding-left: 10px!important;">
+                                                <div class="card rounded2 p-shadow-sm">
+                                                <h5 class="card-title text-center">POR HORARIO DE DOCENTE</h5>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-sm-4">
+                                                                <span class="material-symbols-outlined" style="font-size: 120px !important;">alarm</span>
+                                                            </div>
+                                                            <div class="col-sm-8">
+                                                                <div class="row mb-4">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="CUPO" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Crear Cupos</button>
+                                                                    </form>
+                                                                </div>
+                                                                <div class="row mt-3">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="PROFESOR" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Generar Horarios</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12" style="padding-left: 10px!important;">
+                                                <div class="card rounded2 p-shadow-sm">
+                                                <h5 class="card-title text-center">POR CAPACIDAD DE SALON</h5>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-sm-4">
+                                                                <span class="material-symbols-outlined" style="font-size: 120px !important;">reduce_capacity</span>
+                                                            </div>
+                                                            <div class="col-sm-8">
+                                                                <div class="row mb-4">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="CUPO" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Crear Cupos</button>
+                                                                    </form>
+                                                                </div>
+                                                                <div class="row mt-3">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="SALON" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Generar Horarios</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12" style="padding-left: 10px!important;">
+                                                <div class="card rounded2 p-shadow-sm">
+                                                <h5 class="card-title text-center">MEJOR CRITERIO</h5>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-sm-4">
+                                                                <span class="material-symbols-outlined" style="font-size: 120px !important;">check_box</span>
+                                                            </div>
+                                                            <div class="col-7">
+                                                                <div class="col-sm-8">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="CUPO" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Crear Cupos</button>
+                                                                    </form>
+                                                                </div>
+                                                                <div class="row mt-3">
+                                                                    <form method="POST" enctype="multipart/form-data">
+                                                                        {% csrf_token %}
+                                                                        <input type="text" value="MEJOR" name="valor" hidden>
+                                                                        <button type="submit" class="btn projectapp-button hover-principal color-principal press-button" style="width: 200px !important;">Generar Horarios</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.row -->
+                            </div>
+                        <!-- /.container-fluid -->
+                        </div>
+                        <!-- /.content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_javascript %}
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11"></script>
+  <script>
+    const typed = new Typed('.typed', {
+      strings: ['<i class="mascota">horario de contratación</i>', '<i class="mascota">disponibilidad de generar</i>', '<i class="mascota">materias disponibles</i>'],
+      //stringsElement: '#cadenas-texto', // ID del elemento que contiene cadenas de texto a mostrar.
+      typeSpeed: 75, // Velocidad en mlisegundos para poner una letra,
+      startDelay: 300, // Tiempo de retraso en iniciar la animacion. Aplica tambien cuando termina y vuelve a iniciar,
+      backSpeed: 60, // Velocidad en milisegundos para borrrar una letra,
+      smartBackspace: true, // Eliminar solamente las palabras que sean nuevas en una cadena de texto.
+      shuffle: false, // Alterar el orden en el que escribe las palabras.
+      backDelay: 1500, // Tiempo de espera despues de que termina de escribir una palabra.
+      loop: true, // Repetir el array de strings
+      loopCount: false, // Cantidad de veces a repetir el array.  false = infinite
+      showCursor: true, // Mostrar cursor palpitanto
+      cursorChar: '|', // Caracter para el cursor
+      contentType: 'html' // 'html' o 'null' para texto sin formato
+    })
+  </script>
+{% endblock %}
