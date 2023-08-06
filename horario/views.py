@@ -37,7 +37,7 @@ class VariablesCreateView(CreateView):
 
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon las variables!')
-        return reverse('index')
+        return reverse('horario:salones-create')
 
 
 class VariablesUpdateView(UpdateView):
@@ -54,7 +54,7 @@ class VariablesUpdateView(UpdateView):
 
     def get_success_url(self):
         messages.success(self.request, '¡Se Actualizaron las variables!')
-        return reverse('index')
+        return reverse('horario:salones-create')
     
 
 class SalonesCreateView(TemplateView):
@@ -74,7 +74,7 @@ class SalonesCreateView(TemplateView):
     
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon los salones')
-        return reverse('index')
+        return reverse('horario:profesores-create')
     
     
 class ProfesoresCreateView(TemplateView):
@@ -96,7 +96,7 @@ class ProfesoresCreateView(TemplateView):
     
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon los profesores!')
-        return reverse('index')
+        return reverse('horario:carreras-create')
     
     
 class CarrerasCreateView(TemplateView):
@@ -116,7 +116,7 @@ class CarrerasCreateView(TemplateView):
     
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon las carreras!s')
-        return reverse('index')
+        return reverse('horario:materias-create')
     
 
 class MateriasCreateView(TemplateView):
@@ -144,7 +144,7 @@ class MateriasCreateView(TemplateView):
     
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon las materias!')
-        return reverse('index')
+        return reverse('horario:asignaciones-create')
 
 
 class AsignacionesCreateView(TemplateView):
@@ -174,7 +174,7 @@ class AsignacionesCreateView(TemplateView):
     
     def get_success_url(self):
         messages.success(self.request, '¡Se Crearon las asignaciones!')
-        return reverse('index')
+        return reverse('horario:generar')
     
 
 class PreviewView(TemplateView):
@@ -185,6 +185,7 @@ class PreviewView(TemplateView):
         periodos    = Periodos.objects.all().order_by('posicion')
         salones     = Salones.objects.all().order_by('nombre')
         version     = self.kwargs.get('version')
+        pagina      = 1 if version is None else int(version)
         
         #Si no trae asignacion que busque la mejor
         if(version is None):
@@ -215,6 +216,8 @@ class PreviewView(TemplateView):
                     
         context['periodos'] = periodos
         context['salones'] = salones
+        context['prev_version'] = pagina-1
+        context['next_version'] = pagina+1
         context['asignaciones_dict'] = asignaciones_dict
 
         return context
@@ -307,9 +310,9 @@ class GenerarView(TemplateView):
                                 asignacion.save()
                                 break
                             
-        return redirect('horario:generar')
+        return redirect('horario:preview')
     
     
     #Generar la reparticion de la mejor forma
     def generar_mejor(self, request):
-        return redirect('horario:generar')
+        return redirect('horario:preview')
