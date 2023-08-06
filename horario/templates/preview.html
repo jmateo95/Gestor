@@ -105,6 +105,92 @@
                                 </div>
                             </div>
                             <!-- /.row -->
+
+
+
+
+                            <div class="row" style="padding-top: 5em; display: flex; align-items: center;">
+                                <div class="col-sm-12 col-md-12 col-lg-12">
+                                    <div class="card rounded2 p-shadow-sm" style="overflow: auto;">
+                                        <div class=" mb-2">
+                                            <div class="text-center mb-2">
+                                                <h2>Cursos Con Problemas</h2>
+                                            </div>
+                                        </div>
+                                        <div class="bd-example">
+                                            {% for asignacion in asignacion_problemas %}
+                                                <div class="btn-group ms-4">
+
+                                                    <span class="badge bg-warning" style="font-size: 0.7em; text-align:left">
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    account_circle
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Profesor: {{ asignacion.profesor }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    import_contacts
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Materia: {{ asignacion.materia }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    school
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Carrera: {{ asignacion.materia.carrera }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    group
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Asignados: {{ asignacion.materia.asignados }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    schedule
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Periodo: {{ asignacion.periodo }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    apartment
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Salon: {{ asignacion.salon }}
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div><!-- /.container-fluid -->
                     </div>
                     <!-- /.content -->

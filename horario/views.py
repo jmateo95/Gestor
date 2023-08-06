@@ -1,4 +1,4 @@
-from django.views.generic import TemplateView, CreateView, UpdateView
+from django.views.generic import TemplateView, CreateView, UpdateView, View
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from .models import Variables, Periodos, Salones, Profesores, Carreras, Materias, Asignaciones
@@ -213,14 +213,36 @@ class PreviewView(TemplateView):
                     }
                 else:
                     asignaciones_dict[periodo][salon] = None
-                    
+        
+        #Con Problemas
+        asignacion_problemas = Asignaciones.objects.filter(version=version, periodo=None) | Asignaciones.objects.filter(version=version, salon=None)
+        print(asignacion_problemas)
+    
         context['periodos'] = periodos
         context['salones'] = salones
         context['prev_version'] = pagina-1
         context['next_version'] = pagina+1
         context['asignaciones_dict'] = asignaciones_dict
+        context['asignacion_problemas'] = asignacion_problemas
 
         return context
+
+
+class LimpiarView(View):
+    def get(self, request, *args, **kwargs):
+        Asignaciones.objects.filter(manual=False).delete()
+
+        # Luego, actualiza los registros con manual=True
+        Asignaciones.objects.filter(manual=True).update(
+            periodo=None,
+            salon=None,
+            peso=1,
+            alerta=False
+        )
+
+        # Redirige a la URL 'generar/'
+        return redirect(reverse('horario:generar'))
+    
 
 
 class GenerarView(TemplateView):
@@ -257,13 +279,78 @@ class GenerarView(TemplateView):
     
     #Generar la reparticion por salones
     def generar_salon(self, request):
-        return redirect('horario:generar')
+        corridas=env.int('CORRIDAS', default=1)
+        # Hacerlo por cada version
+        for version in range(1, corridas + 1):
+            
+            # Asignar un maestro y horario 
+            asignaciones = Asignaciones.objects.filter(version=version)
+            asignaciones = asignaciones.annotate(random_order=F('id') % random.randint(1, 10000))
+            asignaciones = asignaciones.order_by('random_order')
+                        
+            # Asignar salon
+            for asignacion in asignaciones:
+                if asignacion.salon is None:
+                    salones_disponibles = Salones.objects.filter(capacidad__gte=asignacion.materia.asignados).order_by('capacidad')
+                    for salon in salones_disponibles:
+                        asignacion.salon=salon
+                        asignacion.peso += 1
+                        asignacion.save()
+                        break
+                    if(asignacion.salon is None):
+                        salones_disponibles = Salones.objects.filter(capacidad__lte=asignacion.materia.asignados).order_by('-capacidad')
+                        for salon in salones_disponibles:
+                            asignacion.salon=salon
+                            asignacion.alerta=True
+                            asignacion.peso += 1
+                            asignacion.save()
+                            break
+            
+            # Asignar un maestro y horario 
+            for asignacion in asignaciones:
+                #Si ya teiene un profesor se le busca periodo
+                if asignacion.profesor:
+                    periodos_disponibles = asignacion.profesor.periodos_disponibles(version=version)
+                    for periodo in periodos_disponibles:
+                        if(Asignaciones.check_salon(periodo=periodo, salon=asignacion.salon, version=version)):
+                            asignacion.periodo=periodo
+                            asignacion.peso += 1
+                            asignacion.save()
+                            break
+                #Si no tiene un profesor se busca un profesor y horario
+                else:
+                    profesores_disponibles = list(Profesores.objects.filter(habilitado=True))
+                    random.shuffle(profesores_disponibles)
+                    for profesor in profesores_disponibles:
+                        periodos_disponibles = profesor.periodos_disponibles(version=version)
+                        for periodo in periodos_disponibles:
+                            if(Asignaciones.check_salon(periodo=periodo, salon=asignacion.salon, version=version)):
+                                asignacion.profesor = profesor
+                                asignacion.periodo = periodo
+                                asignacion.peso += 2
+                                asignacion.save()
+                                break
+                        if(asignacion.periodo):
+                            break
+                    
+                    #Si ningun profesor cumplio el requisito solo se le asigna un horario.
+                    if(asignacion.periodo is None):
+                        periodos_disponibles = asignacion.salon.periodos_disponibles(version=version)
+                        if periodos_disponibles:
+                            periodo_asignado = random.choice(periodos_disponibles)
+                            asignacion.periodo = periodo_asignado
+                            asignacion.peso += 1
+                            asignacion.save()
+                                     
+        return redirect('horario:preview')
+    
     
     #Generar la reparticion por horario de contratacion
     def generar_profesor(self, request):
         corridas=env.int('CORRIDAS', default=1)
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
+            
             # Asignar un maestro y horario 
             asignaciones = Asignaciones.objects.filter(version=version)
             asignaciones = asignaciones.annotate(random_order=F('id') % random.randint(1, 10000))
@@ -309,6 +396,18 @@ class GenerarView(TemplateView):
                                 asignacion.peso += 1
                                 asignacion.save()
                                 break
+                            
+            #Si no se encuentra Profesor se busca un periodo disponible
+            for asignacion in asignaciones:
+                if asignacion.periodo is None and asignacion.salon and asignacion.periodo is None:
+                    periodos_disponibles = asignacion.salon.periodos_disponibles(version=version)
+                    if(periodos_disponibles):
+                        periodo_asignado = random.choice(periodos_disponibles)
+                        asignacion.periodo = periodo_asignado
+                        asignacion.alerta=True
+                        asignacion.peso += 1
+                        asignacion.save()
+                    
                             
         return redirect('horario:preview')
     

@@ -94,6 +94,11 @@ class Salones(models.Model):
     @classmethod
     def eliminar(cls):
         cls.objects.all().delete()
+        
+    def periodos_disponibles(self, version):
+        asignaciones = list(Asignaciones.objects.filter(salon=self, version=version).values_list('periodo__id', flat=True))
+        periodos_disponibles = Periodos.objects.exclude(id__in=asignaciones)
+        return periodos_disponibles
     
     
 class Carreras(models.Model):
