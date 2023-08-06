@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from datetime import datetime, timedelta
+from django.db.models import Q
 
 class Variables(models.Model):
     hora_inicio  = models.TimeField()
@@ -23,7 +24,7 @@ class Periodos(models.Model):
         db_table = 'horario_periodos'
 
     def __str__(self):
-        return f"{self.posicion}"
+        return f"{self.hora_inicio} - {self.hora_fin}"
     
     @classmethod
     def eliminar(cls):
@@ -72,6 +73,11 @@ class Profesores(models.Model):
     @classmethod
     def eliminar(cls):
         cls.objects.all().delete()
+        
+    def periodos_disponibles(self, version):
+        asignaciones = list(Asignaciones.objects.filter(profesor=self, version=version).values_list('periodo__id', flat=True))
+        periodos_disponibles = Periodos.objects.filter(hora_inicio__gte=self.hora_inicio,hora_fin__lte=self.hora_fin).exclude(id__in=asignaciones)
+        return periodos_disponibles
     
     
 class Salones(models.Model):
@@ -129,6 +135,9 @@ class Asignaciones(models.Model):
     profesor            = models.ForeignKey(Profesores,     on_delete=models.CASCADE, null=True)
     materia             = models.ForeignKey(Materias,       on_delete=models.CASCADE, null=True)
     salon               = models.ForeignKey(Salones,        on_delete=models.CASCADE, null=True)
+    peso                = models.IntegerField()
+    version             = models.IntegerField()
+    alerta              = models.BooleanField(default=False)
     
     class Meta:
         db_table = 'horario_asignaciones'
@@ -139,3 +148,8 @@ class Asignaciones(models.Model):
     @classmethod
     def eliminar(cls):
         cls.objects.all().delete()
+
+    @classmethod
+    def check_salon(cls, periodo, salon, version):
+        asignaciones_existen = cls.objects.filter(periodo=periodo, salon=salon, version=version).exists()
+        return not asignaciones_existen

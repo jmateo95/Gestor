@@ -11,7 +11,8 @@ urlpatterns = [
     path('carreras/create/',            CarrerasCreateView.as_view(),       name='carreras-create'),
     path('materias/create/',            MateriasCreateView.as_view(),       name='materias-create'),
     path('asignaciones/create/',        AsignacionesCreateView.as_view(),   name='asignaciones-create'),
-    path('preview',                     PreviewView.as_view(),              name='preview'),    
+    path('preview/',                    PreviewView.as_view(),              name='preview'),
+    path('preview/<int:version>/',      PreviewView.as_view(),              name='preview'),
     path('generar/',                    GenerarView.as_view(),              name='generar'),
     
 ]

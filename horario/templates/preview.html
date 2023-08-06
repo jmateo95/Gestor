@@ -16,7 +16,7 @@
                         <div style="margin-top: 0vh; margin-bottom: 0vh; margin-right: 2vw; margin-left: 2vw;">
                             <div class="row" style="padding-top: 5em; display: flex; align-items: center;">
                                 <div class="col-sm-12 col-md-12 col-lg-12">
-                                    <div class="card rounded2 p-shadow-sm" style="overflow-x: scroll;">
+                                    <div class="card rounded2 p-shadow-sm" style="overflow: auto;">
                                         <div class="text-center mb-2">
                                             <h2>Horario de Clases</h2>
                                         </div>
@@ -25,7 +25,7 @@
                                                 <tr>
                                                     <th scope="col">Periodo/Salon</th>
                                                     {% for salon in salones %}
-                                                        <th scope="col">{{ salon.nombre }}</th>
+                                                        <th scope="col">{{ salon.nombre }} ({{salon.capacidad}})</th>
                                                     {% endfor %}
                                                 </tr>
                                             </thead>
@@ -37,7 +37,7 @@
                                                         {% with asignacion=asignaciones_dict|get_item:periodo|get_item:salon %}
                                                             <td style="text-align: center;">
                                                                 {% if asignacion %}
-                                                                    <span class="badge bg-primary" style="font-size: 0.7em; text-align:left">
+                                                                    <span class="badge {{ asignacion.style }}" style="font-size: 0.7em; text-align:left">
                                                                         <div class="row">
                                                                             <div class="col-2">
                                                                                 <span class="material-symbols-outlined">
@@ -66,6 +66,16 @@
                                                                             </div>
                                                                             <div class="col-8 mt-1">
                                                                                 Carrera: {{ asignacion.carrera }}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-2">
+                                                                                <span class="material-symbols-outlined">
+                                                                                    group
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="col-8 mt-1">
+                                                                                Asignados: {{ asignacion.asignados }}
                                                                             </div>
                                                                         </div>
                                                                     </span>

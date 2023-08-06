@@ -27,4 +27,4 @@ class MateriasAdmin(admin.ModelAdmin):
 
 @admin.register(Asignaciones)
 class AsignacionesAdmin(admin.ModelAdmin):
-    list_display = ['codigo_asignacion', 'periodo', 'profesor', 'materia', 'salon']
+    list_display = ['codigo_asignacion', 'periodo', 'profesor', 'materia', 'salon', 'peso', 'version']
