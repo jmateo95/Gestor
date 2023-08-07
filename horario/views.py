@@ -283,7 +283,6 @@ class GenerarView(TemplateView):
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
             
-            # Asignar un maestro y horario 
             asignaciones = Asignaciones.objects.filter(version=version)
             asignaciones = asignaciones.annotate(random_order=F('id') % random.randint(1, 10000))
             asignaciones = asignaciones.order_by('random_order')
@@ -291,20 +290,22 @@ class GenerarView(TemplateView):
             # Asignar salon
             for asignacion in asignaciones:
                 if asignacion.salon is None:
-                    salones_disponibles = Salones.objects.filter(capacidad__gte=asignacion.materia.asignados).order_by('capacidad')
-                    for salon in salones_disponibles:
-                        asignacion.salon=salon
+                    salones_disponibles = Salones.salones_disponibles_mayor(version=version, capacidad=asignacion.materia.asignados)
+                    
+                    #Escoje un salon
+                    if salones_disponibles:
+                        salon_disponible = random.choice(salones_disponibles)
+                        asignacion.salon = salon_disponible
                         asignacion.peso += 1
                         asignacion.save()
-                        break
+                        
                     if(asignacion.salon is None):
-                        salones_disponibles = Salones.objects.filter(capacidad__lte=asignacion.materia.asignados).order_by('-capacidad')
-                        for salon in salones_disponibles:
-                            asignacion.salon=salon
+                        salones_disponibles = Salones.salones_disponibles_menor(version=version, capacidad=asignacion.materia.asignados)
+                        if salones_disponibles:
+                            asignacion.salon=salones_disponibles[0]
                             asignacion.alerta=True
                             asignacion.peso += 1
                             asignacion.save()
-                            break
             
             # Asignar un maestro y horario 
             for asignacion in asignaciones:
@@ -340,6 +341,7 @@ class GenerarView(TemplateView):
                             periodo_asignado = random.choice(periodos_disponibles)
                             asignacion.periodo = periodo_asignado
                             asignacion.peso += 1
+                            asignacion.alerta=True
                             asignacion.save()
                                      
         return redirect('horario:preview')

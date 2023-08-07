@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from datetime import datetime, timedelta
 from django.db.models import Q
+from django.db.models import Count
 
 class Variables(models.Model):
     hora_inicio  = models.TimeField()
@@ -99,6 +100,20 @@ class Salones(models.Model):
         asignaciones = list(Asignaciones.objects.filter(salon=self, version=version).values_list('periodo__id', flat=True))
         periodos_disponibles = Periodos.objects.exclude(id__in=asignaciones)
         return periodos_disponibles
+    
+    @classmethod
+    def salones_disponibles_mayor(cls, version, capacidad):
+        cantidad_periodos = Periodos.objects.count()
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total=cantidad_periodos)]
+        salones = Salones.objects.filter(capacidad__gte=capacidad).exclude(id__in=id_salon_list).order_by('capacidad')
+        return salones
+    
+    @classmethod
+    def salones_disponibles_menor(cls, version, capacidad):
+        cantidad_periodos = Periodos.objects.count()
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total=cantidad_periodos)]
+        salones = Salones.objects.filter(capacidad__gte=capacidad).exclude(id__in=id_salon_list).order_by('-capacidad')
+        return salones
     
     
 class Carreras(models.Model):
