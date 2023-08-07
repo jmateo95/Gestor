@@ -77,7 +77,7 @@ class Profesores(models.Model):
         
     def periodos_disponibles(self, version):
         asignaciones = list(Asignaciones.objects.filter(profesor=self, version=version).values_list('periodo__id', flat=True))
-        periodos_disponibles = Periodos.objects.filter(hora_inicio__gte=self.hora_inicio,hora_fin__lte=self.hora_fin).exclude(id__in=asignaciones)
+        periodos_disponibles = Periodos.objects.filter(hora_inicio__gte=self.hora_inicio, hora_fin__lte=self.hora_fin).exclude(id__in=asignaciones)
         return periodos_disponibles
     
     
@@ -112,7 +112,7 @@ class Salones(models.Model):
     def salones_disponibles_menor(cls, version, capacidad):
         cantidad_periodos = Periodos.objects.count()
         id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total=cantidad_periodos)]
-        salones = Salones.objects.filter(capacidad__gte=capacidad).exclude(id__in=id_salon_list).order_by('-capacidad')
+        salones = Salones.objects.filter(capacidad__lte=capacidad).exclude(id__in=id_salon_list).order_by('-capacidad')
         return salones
     
     

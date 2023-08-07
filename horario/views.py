@@ -165,7 +165,7 @@ class AsignacionesCreateView(TemplateView):
                     try:
                         profesor =  get_object_or_404(Profesores,   codigo=codigo_profesor)
                         materia  =  get_object_or_404(Materias,     codigo=codigo_materia)
-                        Asignaciones.objects.create(profesor=profesor, materia=materia, manual=True, peso=1, version=version)
+                        Asignaciones.objects.create(profesor=profesor, materia=materia, manual=True, peso=0, version=version)
                     except Carreras.DoesNotExist:
                         print(f"Asignación con el numero {index} no encontrada.")
                         continue
@@ -233,12 +233,7 @@ class LimpiarView(View):
         Asignaciones.objects.filter(manual=False).delete()
 
         # Luego, actualiza los registros con manual=True
-        Asignaciones.objects.filter(manual=True).update(
-            periodo=None,
-            salon=None,
-            peso=1,
-            alerta=False
-        )
+        Asignaciones.objects.filter(manual=True).update(periodo=None, salon=None, peso=0, alerta=False)
 
         # Redirige a la URL 'generar/'
         return redirect(reverse('horario:generar'))
@@ -273,7 +268,7 @@ class GenerarView(TemplateView):
         corridas=env.int('CORRIDAS', default=1)
         for version in range(1, corridas + 1):
             for materia in materias_sin_asignacion:
-                Asignaciones.objects.create(manual=False, materia=materia, periodo=None, profesor=None, salon=None, peso=0, version=version)
+                Asignaciones.objects.create(manual=False, materia=materia, periodo=None, profesor=None, salon=None, peso=0, version=version, alerta=False)
         messages.success(self.request, '¡Se crearon los cupos con exito!')
         return redirect('horario:generar')
     
@@ -289,22 +284,19 @@ class GenerarView(TemplateView):
                         
             # Asignar salon
             for asignacion in asignaciones:
+                #Si no tiene salon buscamos salon
                 if asignacion.salon is None:
                     salones_disponibles = Salones.salones_disponibles_mayor(version=version, capacidad=asignacion.materia.asignados)
-                    
-                    #Escoje un salon
+                    #Escoje un salon que cubra la capacidad
                     if salones_disponibles:
-                        salon_disponible = random.choice(salones_disponibles)
-                        asignacion.salon = salon_disponible
-                        asignacion.peso += 1
+                        asignacion.salon = salones_disponibles[0]
                         asignacion.save()
-                        
+                    
+                    #Si no hay salones que  cubran la demanda
                     if(asignacion.salon is None):
                         salones_disponibles = Salones.salones_disponibles_menor(version=version, capacidad=asignacion.materia.asignados)
                         if salones_disponibles:
-                            asignacion.salon=salones_disponibles[0]
-                            asignacion.alerta=True
-                            asignacion.peso += 1
+                            asignacion.salon = salones_disponibles[0]
                             asignacion.save()
             
             # Asignar un maestro y horario 
@@ -315,9 +307,9 @@ class GenerarView(TemplateView):
                     for periodo in periodos_disponibles:
                         if(Asignaciones.check_salon(periodo=periodo, salon=asignacion.salon, version=version)):
                             asignacion.periodo=periodo
-                            asignacion.peso += 1
                             asignacion.save()
                             break
+                        
                 #Si no tiene un profesor se busca un profesor y horario
                 else:
                     profesores_disponibles = list(Profesores.objects.filter(habilitado=True))
@@ -328,22 +320,20 @@ class GenerarView(TemplateView):
                             if(Asignaciones.check_salon(periodo=periodo, salon=asignacion.salon, version=version)):
                                 asignacion.profesor = profesor
                                 asignacion.periodo = periodo
-                                asignacion.peso += 2
                                 asignacion.save()
                                 break
                         if(asignacion.periodo):
                             break
                     
                     #Si ningun profesor cumplio el requisito solo se le asigna un horario.
-                    if(asignacion.periodo is None):
+                    if(asignacion.periodo is None and asignacion.salon):
                         periodos_disponibles = asignacion.salon.periodos_disponibles(version=version)
                         if periodos_disponibles:
                             periodo_asignado = random.choice(periodos_disponibles)
                             asignacion.periodo = periodo_asignado
-                            asignacion.peso += 1
-                            asignacion.alerta=True
                             asignacion.save()
-                                     
+            
+        puntuar_horario()
         return redirect('horario:preview')
     
     
@@ -352,68 +342,99 @@ class GenerarView(TemplateView):
         corridas=env.int('CORRIDAS', default=1)
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
-            
-            # Asignar un maestro y horario 
             asignaciones = Asignaciones.objects.filter(version=version)
             asignaciones = asignaciones.annotate(random_order=F('id') % random.randint(1, 10000))
             asignaciones = asignaciones.order_by('random_order')
+            
+            # Asignar horario
             for asignacion in asignaciones:
+                # Si ya tiene profesor buscamos horario
                 if asignacion.profesor:
                     periodos_disponibles = asignacion.profesor.periodos_disponibles(version=version)
+                    #Periodo disponible
                     if periodos_disponibles:
                         periodo_asignado = random.choice(periodos_disponibles)
                         asignacion.periodo = periodo_asignado
-                        asignacion.peso += 1
                         asignacion.save()
+                
+                # Si no tiene profesor buscamos horario y profesor
                 else:
                     profesores_disponibles = list(Profesores.objects.filter(habilitado=True))
                     random.shuffle(profesores_disponibles)
                     for profesor in profesores_disponibles:
                         periodos_disponibles = profesor.periodos_disponibles(version=version)
-                        
+                        #Profesor y periodo disponible
                         if periodos_disponibles:
                             periodo_asignado = random.choice(periodos_disponibles)
                             asignacion.profesor = profesor
                             asignacion.periodo = periodo_asignado
-                            asignacion.peso += 2
                             asignacion.save()
                             break
                         
             # Asignar salon
             for asignacion in asignaciones:
+                #Si no tiene salon buscamos salon
                 if asignacion.salon is None:
                     salones_disponibles = Salones.objects.filter(capacidad__gte=asignacion.materia.asignados).order_by('capacidad')
                     for salon in salones_disponibles:
+                        #Escoje un salon que cubra la capacidad
                         if(Asignaciones.check_salon(periodo=asignacion.periodo, salon=salon, version=version)):
                             asignacion.salon=salon
-                            asignacion.peso += 1
                             asignacion.save()
                             break
+                    
+                    #Si no hay salones que  cubran la demanda
                     if(asignacion.salon is None):
                         salones_disponibles = Salones.objects.filter(capacidad__lte=asignacion.materia.asignados).order_by('-capacidad')
                         for salon in salones_disponibles:
                             if(Asignaciones.check_salon(periodo=asignacion.periodo, salon=salon, version=version)):
                                 asignacion.salon=salon
-                                asignacion.alerta=True
-                                asignacion.peso += 1
                                 asignacion.save()
                                 break
-                            
-            #Si no se encuentra Profesor se busca un periodo disponible
-            for asignacion in asignaciones:
-                if asignacion.periodo is None and asignacion.salon and asignacion.periodo is None:
+                                        
+                #Si no se encuentra Profesor se busca un periodo disponible
+                if asignacion.profesor is None and asignacion.salon:
                     periodos_disponibles = asignacion.salon.periodos_disponibles(version=version)
                     if(periodos_disponibles):
                         periodo_asignado = random.choice(periodos_disponibles)
                         asignacion.periodo = periodo_asignado
-                        asignacion.alerta=True
-                        asignacion.peso += 1
                         asignacion.save()
-                    
-                            
+                        
+        puntuar_horario()         
         return redirect('horario:preview')
-    
     
     #Generar la reparticion de la mejor forma
     def generar_mejor(self, request):
         return redirect('horario:preview')
+
+
+
+#Puntuar los horarios    
+def puntuar_horario():
+    asignaciones = Asignaciones.objects.all()
+    # Esquema de calificacion
+    for asignacion in asignaciones:
+        if asignacion.materia:
+            asignacion.peso += 1
+        if asignacion.profesor:
+            asignacion.peso += 1
+        if asignacion.periodo:
+            asignacion.peso += 1
+        if asignacion.salon:
+            asignacion.peso += 1
+            if asignacion.periodo:
+                asignacion.peso += 2
+                if asignacion.profesor:
+                    asignacion.peso += 3
+                    if asignacion.salon.capacidad >= asignacion.materia.asignados:
+                        asignacion.peso += 4
+                    
+
+        if None in (asignacion.materia, asignacion.profesor, asignacion.periodo, asignacion.salon):
+            asignacion.alerta = True
+
+        if asignacion.salon.capacidad < asignacion.materia.asignados:
+            asignacion.alerta = True
+            asignacion.peso -= 1
+                
+        asignacion.save()
