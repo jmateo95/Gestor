@@ -228,18 +228,6 @@ class PreviewView(TemplateView):
         return context
 
 
-class LimpiarView(View):
-    def get(self, request, *args, **kwargs):
-        Asignaciones.objects.filter(manual=False).delete()
-
-        # Luego, actualiza los registros con manual=True
-        Asignaciones.objects.filter(manual=True).update(periodo=None, salon=None, peso=0, alerta=False)
-
-        # Redirige a la URL 'generar/'
-        return redirect(reverse('horario:generar'))
-    
-
-
 class GenerarView(TemplateView):
     template_name = 'generar.html'
     
@@ -249,32 +237,20 @@ class GenerarView(TemplateView):
     
     #Peticion POST
     def post(self, request, *args, **kwargs):
-        if 'CUPO' in request.POST['valor']:
-            return self.generar_cupo(request)
-        elif 'SALON' in request.POST['valor']:
+        if 'SALON' in request.POST['valor']:
             return self.generar_salon(request)
         elif 'PROFESOR' in request.POST['valor']:
             return self.generar_profesor(request)
         elif 'MEJOR' in request.POST['valor']:
             return self.generar_mejor(request)
-
-    #Generar los cupos
-    def generar_cupo(self, request):
-        # Obtener todas las asignaciones con manual=False y eliminarlas
-        Asignaciones.objects.filter(manual=False).delete()
-        
-        # Obtener todas las materias que aún no tienen una asignación
-        materias_sin_asignacion = Materias.objects.filter(asignaciones__isnull=True)
-        corridas=env.int('CORRIDAS', default=1)
-        for version in range(1, corridas + 1):
-            for materia in materias_sin_asignacion:
-                Asignaciones.objects.create(manual=False, materia=materia, periodo=None, profesor=None, salon=None, peso=0, version=version, alerta=False)
-        messages.success(self.request, '¡Se crearon los cupos con exito!')
-        return redirect('horario:generar')
     
     #Generar la reparticion por salones
     def generar_salon(self, request):
+        #Inicializacion
         corridas=env.int('CORRIDAS', default=1)
+        limpiar_horarios()
+        generar_cupo()
+        
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
             
@@ -339,7 +315,11 @@ class GenerarView(TemplateView):
     
     #Generar la reparticion por horario de contratacion
     def generar_profesor(self, request):
+        #Inicializacion
         corridas=env.int('CORRIDAS', default=1)
+        limpiar_horarios()
+        generar_cupo()
+        
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
             asignaciones = Asignaciones.objects.filter(version=version)
@@ -408,8 +388,27 @@ class GenerarView(TemplateView):
         return redirect('horario:preview')
 
 
+# Limpiar los horarios
+def limpiar_horarios():
+    Asignaciones.objects.filter(manual=False).delete()
+    # Luego, actualiza los registros con manual=True
+    Asignaciones.objects.filter(manual=True).update(periodo=None, salon=None, peso=0, alerta=False)
 
-#Puntuar los horarios    
+
+#Generar los cupos
+def generar_cupo():
+    # Obtener todas las asignaciones con manual=False y eliminarlas
+    Asignaciones.objects.filter(manual=False).delete()
+    
+    # Obtener todas las materias que aún no tienen una asignación
+    materias_sin_asignacion = Materias.objects.filter(asignaciones__isnull=True)
+    corridas=env.int('CORRIDAS', default=1)
+    for version in range(1, corridas + 1):
+        for materia in materias_sin_asignacion:
+            Asignaciones.objects.create(manual=False, materia=materia, periodo=None, profesor=None, salon=None, peso=0, version=version, alerta=False)
+            
+
+# Puntuar los horarios    
 def puntuar_horario():
     asignaciones = Asignaciones.objects.all()
     # Esquema de calificacion
