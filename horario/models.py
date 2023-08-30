@@ -111,19 +111,19 @@ class Salones(models.Model):
     def periodos_disponibles(self, version):
         asignaciones = list(Asignaciones.objects.filter(salon=self, version=version).values_list('periodo__id', flat=True))
         periodos_disponibles = Periodos.objects.exclude(id__in=asignaciones)
-        return periodos_disponibles
+        return periodos_disponibles.order_by('hora_inicio')
     
     @classmethod
     def salones_disponibles_mayor(cls, version, capacidad, no_periodos):
         cantidad_periodos = Periodos.objects.count()
-        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos))]
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos)) if resultado['salon'] is not None]
         salones = Salones.objects.filter(capacidad__gte=capacidad).exclude(id__in=id_salon_list).order_by('capacidad')
         return salones
     
     @classmethod
     def salones_disponibles_menor(cls, version, capacidad, no_periodos):
         cantidad_periodos = Periodos.objects.count()
-        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos))]
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos)) if resultado['salon'] is not None]
         salones = Salones.objects.filter(capacidad__lte=capacidad).exclude(id__in=id_salon_list).order_by('-capacidad')
         return salones
     
@@ -207,7 +207,8 @@ class Asignaciones(models.Model):
         
     @classmethod
     def check_semestre(cls, periodos, materia:Materias, version):
-        asignaciones_existen = cls.objects.filter(periodo__in=periodos, version=version, materia__semestre=materia.semestre, materia__carrera=materia.carrera).exists()
+        materias_coincidentes = Materias.objects.filter(carrera=materia.carrera, semestre=materia.semestre).exclude(id=materia.id)
+        asignaciones_existen = Asignaciones.objects.filter(version=version, materia__in=materias_coincidentes,periodo__in=periodos).exists()
         return not asignaciones_existen
 
 class Habilitaciones(models.Model):

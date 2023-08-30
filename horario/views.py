@@ -262,7 +262,7 @@ class PreviewView(TemplateView):
                     asignaciones_dict[periodo][salon] = None
         
         #Con Problemas
-        asignacion_problemas = Asignaciones.objects.filter(version=version, periodo=None) | Asignaciones.objects.filter(version=version, salon=None)
+        asignacion_problemas = Asignaciones.objects.filter(version=version, periodo=None).order_by('id') | Asignaciones.objects.filter(version=version, salon=None).order_by('id') 
     
         context['periodos'] = periodos
         context['salones'] = salones
@@ -315,6 +315,7 @@ class GenerarView(TemplateView):
                 #Si no tiene salon buscamos salon
                 if asignaciones[0].salon is None:
                     salones_disponibles = Salones.salones_disponibles_mayor(version=version, capacidad=materia.asignados, no_periodos=materia.no_periodos)
+                    
                     #Escoje un salon que cubra la capacidad
                     if salones_disponibles:
                         asignaciones.update(salon=salones_disponibles[0])
@@ -359,6 +360,7 @@ class GenerarView(TemplateView):
                         #tuplas de periodos disponibles
                         periodos_disponibles = get_periodos_disponibles(periodos_habiles, materia.no_periodos, version=version)
 
+                        #Profesor y periodo disponible
                         for periodos in periodos_disponibles:
                             if(Asignaciones.check_salon(periodos=periodos, salon=asignaciones[0].salon, version=version) and Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version) ):
                                 for index, asignacion in enumerate(asignaciones):
@@ -366,21 +368,22 @@ class GenerarView(TemplateView):
                                     asignacion.periodo=periodos[index]
                                     asignacion.save()
                                 break
-                        if(asignaciones[0].periodo):
+                        if(asignaciones[0].profesor):
                             break
                     
-                    #Si ningun profesor cumplio el requisito solo se le asigna un horario.
+                    #Si no se encuentra Profesor se busca un periodo disponible
                     if(asignaciones[0].periodo is None and asignaciones[0].salon):
                         periodos_habiles = asignaciones[0].salon.periodos_disponibles(version=version)
 
                         #tuplas de periodos disponibles
                         periodos_disponibles = get_periodos_disponibles(periodos_habiles, materia.no_periodos, version=version)
 
-                        if periodos_disponibles:
-                            periodos_asignados = random.choice(periodos_disponibles)
-                            for index, asignacion in enumerate(asignaciones):
-                                asignacion.periodo=periodos_asignados[index]
-                                asignacion.save()
+                        for periodos in periodos_disponibles:
+                            if(Asignaciones.check_salon(periodos=periodos, salon=asignaciones[0].salon, version=version) and Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version)):
+                                for index, asignacion in enumerate(asignaciones):
+                                    asignacion.periodo=periodos[index]
+                                    asignacion.save()
+                                break
             
         puntuar_horario()
         return redirect('horario:preview')
@@ -395,63 +398,107 @@ class GenerarView(TemplateView):
         
         # Hacerlo por cada version
         for version in range(1, corridas + 1):
-            asignaciones = Asignaciones.objects.filter(version=version)
-            asignaciones = asignaciones.annotate(random_order=F('id') % random.randint(1, 10000))
-            asignaciones = asignaciones.order_by('random_order')
+
+            #Obtener las materias
+            materias = list(Materias.objects.all())
+            random.shuffle(materias)
             
             # Asignar horario
-            for asignacion in asignaciones:
-                # Si ya tiene profesor buscamos horario
-                if asignacion.profesor:
-                    periodos_disponibles = asignacion.profesor.periodos_disponibles(version=version)
-                    #Periodo disponible
-                    if periodos_disponibles:
-                        periodo_asignado = random.choice(periodos_disponibles)
-                        asignacion.periodo = periodo_asignado
-                        asignacion.save()
+            for materia in materias:
+
+                #Obtengo la asignacion
+                asignaciones = Asignaciones.objects.filter(version=version, materia=materia).order_by('no_periodo')
+
+                #Si ya teiene un profesor se le busca periodo
+                if asignaciones[0].profesor:
+                    #Lista de periodos  habiles para usar
+                    periodos_habiles = asignaciones[0].profesor.periodos_disponibles(version=version)
+
+                    #tuplas de periodos disponibles
+                    periodos_disponibles = get_periodos_disponibles(periodos_habiles, materia.no_periodos, version=version)
+
+                    for periodos in periodos_disponibles:
+                        if(Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version)):
+                            for index, asignacion in enumerate(asignaciones):
+                                asignacion.periodo=periodos[index]
+                                asignacion.save()
+                            break
                 
                 # Si no tiene profesor buscamos horario y profesor
                 else:
-                    profesores_disponibles = list(Profesores.objects.filter(habilitado=True))
+                    profesores_disponibles = Profesores.profesores_disponibles(carrera=materia.carrera, area=materia.area)
                     random.shuffle(profesores_disponibles)
+
                     for profesor in profesores_disponibles:
-                        periodos_disponibles = profesor.periodos_disponibles(version=version)
+                        periodos_habiles = profesor.periodos_disponibles(version=version)
+
+                        #tuplas de periodos disponibles
+                        periodos_disponibles = get_periodos_disponibles(periodos_habiles, materia.no_periodos, version=version)
+
                         #Profesor y periodo disponible
-                        if periodos_disponibles:
-                            periodo_asignado = random.choice(periodos_disponibles)
-                            asignacion.profesor = profesor
-                            asignacion.periodo = periodo_asignado
-                            asignacion.save()
+                        for periodos in periodos_disponibles:
+                            if(Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version) ):
+                                for index, asignacion in enumerate(asignaciones):
+                                    asignacion.profesor = profesor
+                                    asignacion.periodo=periodos[index]
+                                    asignacion.save()
+                                break
+                        if(asignaciones[0].periodo):
                             break
                         
             # Asignar salon
-            for asignacion in asignaciones:
+            for materia in materias:
+
+                #Obtengo la asignacion
+                asignaciones = Asignaciones.objects.filter(version=version, materia=materia).order_by('no_periodo')
+
                 #Si no tiene salon buscamos salon
-                if asignacion.salon is None:
-                    salones_disponibles = Salones.objects.filter(capacidad__gte=asignacion.materia.asignados).order_by('capacidad')
+                if asignaciones[0].salon is None:
+                    salones_disponibles = Salones.salones_disponibles_mayor(version=version, capacidad=materia.asignados, no_periodos=materia.no_periodos)
+                    
+                    #Escoje un salon que cubra la capacidad
                     for salon in salones_disponibles:
-                        #Escoje un salon que cubra la capacidad
-                        if(Asignaciones.check_salon(periodo=asignacion.periodo, salon=salon, version=version)):
-                            asignacion.salon=salon
-                            asignacion.save()
+
+                        #Lista de periodos  habiles para usar en el salon
+                        periodos = [asignacion.periodo for asignacion in asignaciones]
+                        if(Asignaciones.check_salon(periodos=periodos, salon=salon, version=version) and Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version) ):
+                            for index, asignacion in enumerate(asignaciones):
+                                asignacion.salon=salon
+                                asignacion.save()
+                                
+                        if(asignaciones[0].salon):
                             break
                     
                     #Si no hay salones que  cubran la demanda
-                    if(asignacion.salon is None):
-                        salones_disponibles = Salones.objects.filter(capacidad__lte=asignacion.materia.asignados).order_by('-capacidad')
+                    if(asignaciones[0].salon is None):
+                        salones_disponibles = Salones.salones_disponibles_menor(version=version, capacidad=materia.asignados, no_periodos=materia.no_periodos)
+
+                        #Escoje un salon que cubra la capacidad
                         for salon in salones_disponibles:
-                            if(Asignaciones.check_salon(periodo=asignacion.periodo, salon=salon, version=version)):
-                                asignacion.salon=salon
-                                asignacion.save()
+
+                           #Lista de periodos  habiles para usar en el salon
+                            periodos = [asignacion.periodo for asignacion in asignaciones]
+                            if(Asignaciones.check_salon(periodos=periodos, salon=salon, version=version) and Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version) ):
+                                for index, asignacion in enumerate(asignaciones):
+                                    asignacion.salon=salon
+                                    asignacion.save()
+                                break
+                            if(asignaciones[0].salon):
                                 break
                                         
                 #Si no se encuentra Profesor se busca un periodo disponible
-                if asignacion.profesor is None and asignacion.salon:
-                    periodos_disponibles = asignacion.salon.periodos_disponibles(version=version)
-                    if(periodos_disponibles):
-                        periodo_asignado = random.choice(periodos_disponibles)
-                        asignacion.periodo = periodo_asignado
-                        asignacion.save()
+                if asignaciones[0].periodo is None and asignaciones[0].salon:
+                    periodos_habiles = asignaciones[0].salon.periodos_disponibles(version=version)
+                    
+                    #tuplas de periodos disponibles
+                    periodos_disponibles = get_periodos_disponibles(periodos_habiles, materia.no_periodos, version=version)
+
+                    for periodos in periodos_disponibles:
+                        if(Asignaciones.check_salon(periodos=periodos, salon=asignaciones[0].salon, version=version) and Asignaciones.check_semestre(periodos=periodos, materia=materia, version=version)):
+                            for index, asignacion in enumerate(asignaciones):
+                                asignacion.periodo=periodos[index]
+                                asignacion.save()
+                            break
                         
         puntuar_horario()         
         return redirect('horario:preview')
