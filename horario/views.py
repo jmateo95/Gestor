@@ -372,7 +372,7 @@ class GenerarView(TemplateView):
                             break
                     
                     #Si no se encuentra Profesor se busca un periodo disponible
-                    if(asignaciones[0].periodo is None and asignaciones[0].salon):
+                    if(asignaciones[0].profesor is None and asignaciones[0].salon):
                         periodos_habiles = asignaciones[0].salon.periodos_disponibles(version=version)
 
                         #tuplas de periodos disponibles
@@ -465,7 +465,7 @@ class GenerarView(TemplateView):
                             for index, asignacion in enumerate(asignaciones):
                                 asignacion.salon=salon
                                 asignacion.save()
-                                
+                            break
                         if(asignaciones[0].salon):
                             break
                     
@@ -483,11 +483,11 @@ class GenerarView(TemplateView):
                                     asignacion.salon=salon
                                     asignacion.save()
                                 break
-                            if(asignaciones[0].salon):
-                                break
+                        if(asignaciones[0].salon):
+                            break
                                         
                 #Si no se encuentra Profesor se busca un periodo disponible
-                if asignaciones[0].periodo is None and asignaciones[0].salon:
+                if asignaciones[0].profesor is None and asignaciones[0].salon:
                     periodos_habiles = asignaciones[0].salon.periodos_disponibles(version=version)
                     
                     #tuplas de periodos disponibles
@@ -568,7 +568,7 @@ def puntuar_horario():
                 asignacion.alerta = True
                 asignacion.peso -= 1
                 #Añadir el error
-                asignacion.error+= "La capacidad del salón puede no ser la desada.\n"
+                asignacion.error+= "\nLa capacidad del salón puede no ser la desada."
         asignacion.save()
 
 
