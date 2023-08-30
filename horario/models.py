@@ -74,11 +74,23 @@ class Profesores(models.Model):
     @classmethod
     def eliminar(cls):
         cls.objects.all().delete()
+
+    @classmethod
+    def profesores_disponibles(cls, carrera, area):
+        area_filter = Q(habilitaciones__area=area)
+        if area.codigo != 'BASICA':
+            area_filter &= Q(habilitaciones__carrera=carrera)
+        
+        profesores_habilitados = cls.objects.filter(
+            area_filter,
+            habilitaciones__profesor__habilitado=True
+        ).distinct()
+        return list(profesores_habilitados)
         
     def periodos_disponibles(self, version):
         asignaciones = list(Asignaciones.objects.filter(profesor=self, version=version).values_list('periodo__id', flat=True))
         periodos_disponibles = Periodos.objects.filter(hora_inicio__gte=self.hora_inicio, hora_fin__lte=self.hora_fin).exclude(id__in=asignaciones)
-        return periodos_disponibles
+        return periodos_disponibles.order_by('hora_inicio')
     
     
 class Salones(models.Model):
@@ -102,16 +114,16 @@ class Salones(models.Model):
         return periodos_disponibles
     
     @classmethod
-    def salones_disponibles_mayor(cls, version, capacidad):
+    def salones_disponibles_mayor(cls, version, capacidad, no_periodos):
         cantidad_periodos = Periodos.objects.count()
-        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total=cantidad_periodos)]
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos))]
         salones = Salones.objects.filter(capacidad__gte=capacidad).exclude(id__in=id_salon_list).order_by('capacidad')
         return salones
     
     @classmethod
-    def salones_disponibles_menor(cls, version, capacidad):
+    def salones_disponibles_menor(cls, version, capacidad, no_periodos):
         cantidad_periodos = Periodos.objects.count()
-        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total=cantidad_periodos)]
+        id_salon_list = [resultado['salon'] for resultado in Asignaciones.objects.filter(version=version).values('salon').annotate(total=Count('id')).filter(total__gt=(cantidad_periodos-no_periodos))]
         salones = Salones.objects.filter(capacidad__lte=capacidad).exclude(id__in=id_salon_list).order_by('-capacidad')
         return salones
     
@@ -119,6 +131,7 @@ class Salones(models.Model):
 class Carreras(models.Model):
     codigo      = models.CharField(max_length=25,   blank=True,default="")
     nombre      = models.CharField(max_length=200,  blank=True,default="")
+    color       = models.CharField(max_length=20,  blank=True,default="")
     
     class Meta:
         db_table = 'horario_carreras'
@@ -129,13 +142,28 @@ class Carreras(models.Model):
     @classmethod
     def eliminar(cls):
         cls.objects.all().delete()
+
+
+class Areas(models.Model):
+    codigo      = models.CharField(max_length=25,   blank=True,default="")
+    nombre      = models.CharField(max_length=200,  blank=True,default="")
+    
+    class Meta:
+        db_table = 'horario_areas'
+
+    def __str__(self):
+        return f"{self.nombre}"
     
 
 class Materias(models.Model):
     codigo      = models.CharField(max_length=25,   blank=True,default="")
     nombre      = models.CharField(max_length=200,  blank=True,default="")
+    semestre    = models.CharField(max_length=5,    blank=True,default="")
     asignados   = models.IntegerField()
+    no_periodos = models.IntegerField()
     carrera     = models.ForeignKey(Carreras, on_delete=models.CASCADE)
+    area        = models.ForeignKey(Areas,    on_delete=models.CASCADE)
+
     
     class Meta:
         db_table = 'horario_materias'
@@ -151,13 +179,16 @@ class Materias(models.Model):
 class Asignaciones(models.Model):
     codigo_asignacion   = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     manual              = models.BooleanField(default=False)
+    peso                = models.IntegerField()
+    no_periodo          = models.IntegerField()
+    version             = models.IntegerField()
+    alerta              = models.BooleanField(default=False)
+    error               = models.CharField(max_length=4000,  blank=True, default="")
     periodo             = models.ForeignKey(Periodos,       on_delete=models.CASCADE, null=True)
     profesor            = models.ForeignKey(Profesores,     on_delete=models.CASCADE, null=True)
     materia             = models.ForeignKey(Materias,       on_delete=models.CASCADE, null=True)
     salon               = models.ForeignKey(Salones,        on_delete=models.CASCADE, null=True)
-    peso                = models.IntegerField()
-    version             = models.IntegerField()
-    alerta              = models.BooleanField(default=False)
+    
     
     class Meta:
         db_table = 'horario_asignaciones'
@@ -170,6 +201,26 @@ class Asignaciones(models.Model):
         cls.objects.all().delete()
 
     @classmethod
-    def check_salon(cls, periodo, salon, version):
-        asignaciones_existen = cls.objects.filter(periodo=periodo, salon=salon, version=version).exists()
+    def check_salon(cls, periodos, salon, version):
+        asignaciones_existen = cls.objects.filter(periodo__in=periodos, salon=salon, version=version).exists()
         return not asignaciones_existen
+        
+    @classmethod
+    def check_semestre(cls, periodos, materia:Materias, version):
+        asignaciones_existen = cls.objects.filter(periodo__in=periodos, version=version, materia__semestre=materia.semestre, materia__carrera=materia.carrera).exists()
+        return not asignaciones_existen
+
+class Habilitaciones(models.Model):
+    profesor            = models.ForeignKey(Profesores,     on_delete=models.CASCADE, null=True)
+    carrera             = models.ForeignKey(Carreras,       on_delete=models.CASCADE, null=True)
+    area                = models.ForeignKey(Areas,          on_delete=models.CASCADE, null=True)
+    
+    class Meta:
+        db_table = 'horario_habilitaciones'
+
+    def __str__(self):
+        return f"{self.profesor.nombre}- {self.carrera.nombre} - {self.area.nombre}"
+    
+    @classmethod
+    def eliminar(cls):
+        cls.objects.all().delete()

@@ -24,7 +24,10 @@
                                                 </span>
                                             </a>
                                             <div class="text-center mb-2">
-                                                <h2>Horario de Clases</h2>
+                                                <h2>Horario de Clases No {{version}} 
+                                                    <br>
+                                                    Efectividad: {{efectividad}} %
+                                                </h2>
                                             </div>
                                             <a href="{% url 'horario:preview' version=next_version %}" class="btn btn-primary" style="border-radius:25px">
                                                 <span class="material-icons">
@@ -50,7 +53,7 @@
                                                         {% with asignacion=asignaciones_dict|get_item:periodo|get_item:salon %}
                                                             <td style="text-align: center;">
                                                                 {% if asignacion %}
-                                                                    <span class="badge {{ asignacion.style }}" style="font-size: 0.7em; text-align:left">
+                                                                    <span class="badge" style="font-size: 0.7em; text-align:left; background-color:{{ asignacion.style }}; color: #fff;" title="{{ asignacion.error }}">
                                                                         <div class="row">
                                                                             <div class="col-2">
                                                                                 <span class="material-symbols-outlined">
@@ -79,6 +82,16 @@
                                                                             </div>
                                                                             <div class="col-8 mt-1">
                                                                                 Carrera: {{ asignacion.carrera }}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-2">
+                                                                                <span class="material-symbols-outlined">
+                                                                                    date_range
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="col-8 mt-1">
+                                                                                Semestre: {{ asignacion.semestre }}
                                                                             </div>
                                                                         </div>
                                                                         <div class="row">
@@ -121,7 +134,7 @@
                                             {% for asignacion in asignacion_problemas %}
                                                 <div class="btn-group ms-4">
 
-                                                    <span class="badge bg-warning" style="font-size: 0.7em; text-align:left">
+                                                    <span class="badge bg-warning" style="font-size: 0.7em; text-align:left" title="{{ asignacion.error }}">
                                                         <div class="row">
                                                             <div class="col-2">
                                                                 <span class="material-symbols-outlined">
@@ -150,6 +163,16 @@
                                                             </div>
                                                             <div class="col-8 mt-1">
                                                                 Carrera: {{ asignacion.materia.carrera }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2">
+                                                                <span class="material-symbols-outlined">
+                                                                    date_range
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-8 mt-1">
+                                                                Semestre: {{ asignacion.materia.semestre }}
                                                             </div>
                                                         </div>
                                                         <div class="row">
