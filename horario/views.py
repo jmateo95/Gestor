@@ -286,11 +286,14 @@ class GenerarView(TemplateView):
     #Peticion POST
     def post(self, request, *args, **kwargs):
         if 'SALON' in request.POST['valor']:
-            return self.generar_salon(request)
+            self.generar_salon(request)
         elif 'PROFESOR' in request.POST['valor']:
-            return self.generar_profesor(request)
+            self.generar_profesor(request)
         elif 'MEJOR' in request.POST['valor']:
-            return self.generar_mejor(request)
+            self.generar_mejor(request)
+        
+        puntuar_horario()
+        return redirect('horario:preview')
     
     #Generar la reparticion por salones
     def generar_salon(self, request):
@@ -384,9 +387,6 @@ class GenerarView(TemplateView):
                                     asignacion.periodo=periodos[index]
                                     asignacion.save()
                                 break
-            
-        puntuar_horario()
-        return redirect('horario:preview')
     
     
     #Generar la reparticion por horario de contratacion
@@ -466,8 +466,6 @@ class GenerarView(TemplateView):
                                 asignacion.salon=salon
                                 asignacion.save()
                             break
-                        if(asignaciones[0].salon):
-                            break
                     
                     #Si no hay salones que  cubran la demanda
                     if(asignaciones[0].salon is None):
@@ -483,8 +481,6 @@ class GenerarView(TemplateView):
                                     asignacion.salon=salon
                                     asignacion.save()
                                 break
-                        if(asignaciones[0].salon):
-                            break
                                         
                 #Si no se encuentra Profesor se busca un periodo disponible
                 if asignaciones[0].profesor is None and asignaciones[0].salon:
@@ -499,13 +495,10 @@ class GenerarView(TemplateView):
                                 asignacion.periodo=periodos[index]
                                 asignacion.save()
                             break
-                        
-        puntuar_horario()         
-        return redirect('horario:preview')
     
     #Generar la reparticion de la mejor forma
     def generar_mejor(self, request):
-        return redirect('horario:preview')
+        return
 
 
 # Limpiar los horarios
